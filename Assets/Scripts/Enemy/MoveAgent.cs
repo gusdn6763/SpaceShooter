@@ -59,7 +59,6 @@ public class MoveAgent : MonoBehaviour
         enemyTr = GetComponent<Transform>();
         agent = GetComponent<NavMeshAgent>();
 
-        //도착지점에 다 다를때 느리게 움직이는거 없앰
         agent.autoBraking = false;
         agent.updateRotation = false;
         agent.speed = patrolSpeed;
@@ -70,6 +69,8 @@ public class MoveAgent : MonoBehaviour
         {
             group.GetComponentsInChildren<Transform>(wayPoints);
             wayPoints.RemoveAt(0);
+
+            nextIdx = Random.Range(0, wayPoints.Count);
         }
         //enemy.AI 에서 정찰 상태인데 지금 스타트 함수가 먼저 실행되서 정찰 프로퍼티를 실행 해줘야함
         this.patrolling = true;
@@ -116,7 +117,7 @@ public class MoveAgent : MonoBehaviour
 
         if(agent.velocity.sqrMagnitude>=0.2f*0.2f && agent.remainingDistance<0.5f)
         {
-            nextIdx = ++nextIdx % wayPoints.Count;
+            nextIdx = Random.Range(0, wayPoints.Count);
 
             MoveWayPoint();
         }

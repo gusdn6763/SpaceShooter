@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class EnemyAI : MonoBehaviour
 {
+    //적 캐릭터의 상태를 표현하기 위한 열거형 변수 정의
     public enum State
     {
         PATROL,
@@ -11,114 +12,93 @@ public class EnemyAI : MonoBehaviour
         ATTACK,
         DIE
     }
-
+    //상태를 저장할 변수
     public State state = State.PATROL;
-
+    //주인공의 위치를 저장할 변수
     private Transform playerTr;
-
+    //적 캐릭터의 위치를 저장할 변수
     private Transform enemyTr;
-
+    //Animator 컴포넌트를 저장할 변수
     private Animator animator;
 
+    //공격 사정거리
+    public float attackDist = 5.0f;
+    //추적 사정거리
+    public float traceDist = 10.0f;
+    //사망 여부를 판단할 변수
+    public bool isDie = false;
+    //코루틴에서 사용할 지연시간 변수
     private WaitForSeconds ws;
 
+    //이동을 제어하는 MoveAgent 클래스를 저장할 변수
     private MoveAgent moveAgent;
-
+    //총 발사를 제어하는 EnemyFire 클래스를 저장할 변수
     private EnemyFire enemyFire;
 
-    public float attackDist = 5.0f;
-    public float traceDist = 10.0f;
-
-    public bool isDie = false;
-
-    //유니티에서 선언한 피라메터 IsMove 를 hashMove로 가져온다.
-    //한번 바꾸면 전부 바꿔야 되서
+    //애니메이터 컨트롤러에 정의한 파라미터의 해시값을 미리 추출
     private readonly int hashMove = Animator.StringToHash("IsMove");
     private readonly int hashSpeed = Animator.StringToHash("Speed");
     private readonly int hashDie = Animator.StringToHash("Die");
     private readonly int hashDieIdx = Animator.StringToHash("DieIdx");
+    private readonly int hashOffset = Animator.StringToHash("Offset");
+    private readonly int hashWalkSpeed = Animator.StringToHash("WalkSpeed");
+    private readonly int hashPlayerDie = Animator.StringToHash("PlayerDie");
 
-    private void Awake()
+    void Awake()
     {
+        //주인공 게임오브젝트 추출
         var player = GameObject.FindGameObjectWithTag("PLAYER");
-
+        //주인공의 Transform 컴포넌트 추출
         if (player != null)
-        {
             playerTr = player.GetComponent<Transform>();
-        }
+        //적 캐릭터의 Tranform 컴포넌트 추출
         enemyTr = GetComponent<Transform>();
-        moveAgent = GetComponent<MoveAgent>();
+        //Animator 컴포넌트 추출
         animator = GetComponent<Animator>();
+        //이동을 제어하는 MoveAgent 클래스를 추출
+        moveAgent = GetComponent<MoveAgent>();
+        //총 발사를 제어하는 EnemyFire 클래스를 추출
         enemyFire = GetComponent<EnemyFire>();
 
+        //코루틴의 지연시간 생성
         ws = new WaitForSeconds(0.3f);
-        
+        //Cycle Offset 값을 불규칙하게 변경
+        animator.SetFloat(hashOffset, Random.Range(0.0f, 1.0f));
+        //Speed 값을 불규칙하게 변경
+        animator.SetFloat(hashWalkSpeed, Random.Range(1.0f, 1.2f));
     }
 
-
-    private void OnEnable()
+    void OnEnable()
     {
+        //CheckState 코루틴 함수 실행
         StartCoroutine(CheckState());
-
+        //Action 코루틴 함수 실행
         StartCoroutine(Action());
+
+        Damage.OnPlayerDie += this.OnPlayerDie;
     }
 
-    IEnumerator Action()
+    void OnDisable()
     {
-        while (!isDie)
-        {
-            yield return ws;
-
-            switch (state)
-            {
-                case State.PATROL:
-                    enemyFire.isFire = false;
-                    moveAgent.patrolling = true;
-                    animator.SetBool(hashMove, true);
-                    break;
-                case State.TRACE:
-                    enemyFire.isFire = false;
-                    moveAgent.traceTarget = playerTr.position;
-                    animator.SetBool(hashMove, true);
-                    break;
-                case State.ATTACK:
-                    moveAgent.Stop();
-                    animator.SetBool(hashMove, false);
-                    if(enemyFire.isFire == false)
-                    {
-                        enemyFire.isFire = true;
-                    }
-            
-                    break;
-                case State.DIE:
-                    isDie = true;
-                    enemyFire.isFire = false;
-                    moveAgent.Stop();
-                    animator.SetInteger(hashDieIdx, Random.Range(0, 3));
-                    animator.SetTrigger(hashDie);
-                    break;
-            }
-        }
+        Damage.OnPlayerDie -= this.OnPlayerDie;
     }
 
-
+    //적 캐릭터의 상태를 검사하는 코루틴 함수
     IEnumerator CheckState()
     {
-        while(!isDie)
+        //적 캐릭터가 사망하기 전까지 도는 무한루프
+        while (!isDie)
         {
-            if(state==State.DIE)
-            {
-                yield break;
-            }
-
+            //상태가 사망이면 코루틴 함수를 종료시킴
+            if (state == State.DIE) yield break;
+            //주인공과 적 캐릭터 간의 거리를 계산
             float dist = Vector3.Distance(playerTr.position, enemyTr.position);
-            
-            if (dist<=attackDist)
+            //공격 사정거리 이내의 경우
+            if (dist <= attackDist)
             {
                 state = State.ATTACK;
-            }
-
-            else if(dist <=traceDist)
+            }//추적 사정거리 이내의 경우
+            else if (dist <= traceDist)
             {
                 state = State.TRACE;
             }
@@ -126,14 +106,72 @@ public class EnemyAI : MonoBehaviour
             {
                 state = State.PATROL;
             }
-
+            //0.3초 동안 대기하는 동안 제어권을 양보
             yield return ws;
         }
     }
 
-    // Update is called once per frame
+    //상태에 따라 적 캐릭터의 행동을 처리하는 코루틴 함수
+    IEnumerator Action()
+    {
+        while (!isDie)
+        {
+            yield return ws;
+            //상태에 따라 분기 처리
+            switch (state)
+            {
+                case State.PATROL:
+                    //총 발사 정지
+                    enemyFire.isFire = false;
+                    //순찰 모드를 활성화
+                    moveAgent.patrolling = true;
+                    animator.SetBool(hashMove, true);
+                    break;
+                case State.TRACE:
+                    //총 발사 정지
+                    enemyFire.isFire = false;
+                    //주인공의 위치를 넘겨 추적 모드로 변경
+                    moveAgent.traceTarget = playerTr.position;
+                    animator.SetBool(hashMove, true);
+                    break;
+                case State.ATTACK:
+                    //순찰 및 추적을 정지
+                    moveAgent.Stop();
+                    animator.SetBool(hashMove, false);
+
+                    //총알 발사 시작
+                    if (enemyFire.isFire == false)
+                        enemyFire.isFire = true;
+                    break;
+                case State.DIE:
+                    isDie = true;
+                    enemyFire.isFire = false;
+                    //순찰 및 추적을 정지
+                    moveAgent.Stop();
+                    //사망 애니메이션의 종류를 지정
+                    animator.SetInteger(hashDieIdx, Random.Range(0, 3));
+                    //사망 애니메이션 실행
+                    animator.SetTrigger(hashDie);
+                    //Capsule Collider 컴포넌트를 비활성화
+                    GetComponent<CapsuleCollider>().enabled = false;
+                    break;
+            }
+        }
+    }
+
     void Update()
     {
+        //Speed 파라미터에 이동 속도를 전달
         animator.SetFloat(hashSpeed, moveAgent.speed);
+
+    }
+
+    public void OnPlayerDie()
+    {
+        moveAgent.Stop();
+        enemyFire.isFire = false;
+        //모드 코루틴 함수를 종료시킴
+        StopAllCoroutines();
+        animator.SetTrigger(hashPlayerDie);
     }
 }

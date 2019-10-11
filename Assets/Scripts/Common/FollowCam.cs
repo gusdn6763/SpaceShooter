@@ -4,6 +4,8 @@ using UnityEngine;
 
 public class FollowCam : MonoBehaviour
 {
+    public static FollowCam instance;
+
     public Transform target;
     public float moveDamping = 15f;
     public float rotateDamping = 10f;
@@ -11,6 +13,22 @@ public class FollowCam : MonoBehaviour
     public float height = 3f;
     public float targetOffset = 3f;
     private Transform tr;
+
+
+    private void Awake()
+    {
+
+        if (instance == null)
+        {
+            instance = this;
+        }
+        else if (instance != null)
+        {
+            Destroy(this.gameObject);
+        }
+        DontDestroyOnLoad(this.gameObject);
+
+    }
 
     private void Start()
     {

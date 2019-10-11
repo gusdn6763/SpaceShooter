@@ -14,8 +14,21 @@ public class EnemyDamage : MonoBehaviour
         //혈흔 효과 프리팹을 로드
         bloodEffect = Resources.Load<GameObject>("BulletImpactFleshBigEffect");
     }
+    private void Update()
+    {
+        Die();
+    }
+    void Die()
+    {
+        if (hp <= 0.0f)
+        {
+            //적 캐릭터의 상태를 DIE로 변경
 
-    void OnCollisionEnter(Collision coll)
+            GetComponent<EnemyAI>().state = EnemyAI.State.DIE;
+        }
+    }
+
+    public void OnCollisionEnter(Collision coll)
     {
         if (coll.collider.tag == bulletTag)
         {
@@ -25,14 +38,6 @@ public class EnemyDamage : MonoBehaviour
             Destroy(coll.gameObject);
             //생명 게이지 차감
             hp -= coll.gameObject.GetComponent<BulletCtrl>().damage ;
-
-            
-            if (hp <= 0.0f)
-            {
-                //적 캐릭터의 상태를 DIE로 변경
-                hp = 0;
-                GetComponent<EnemyAI>().state = EnemyAI.State.DIE;
-            }
         }
     }
 

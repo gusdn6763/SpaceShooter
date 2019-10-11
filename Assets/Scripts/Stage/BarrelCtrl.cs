@@ -93,9 +93,12 @@ public class BarrelCtrl : MonoBehaviour
             }
             _rb.AddExplosionForce(1200.0f, pos, expRadius, 1000.0f);
 
-            if (coll.gameObject.tag =="Enemy")
+            if (coll.gameObject.tag =="ENEMY")
             {
-                coll.gameObject.GetComponent<EnemyAI>().state = EnemyAI.State.DIE;
+                coll.gameObject.GetComponent<Rigidbody>().mass = 1f;
+                //coll.gameObject.GetComponent<EnemyAI>().state = EnemyAI.State.DIE;
+                coll.gameObject.GetComponent<EnemyDamage>().hp -= 50;
+                Debug.Log(coll.gameObject.GetComponent<EnemyDamage>().hp);
             }
         }
     }

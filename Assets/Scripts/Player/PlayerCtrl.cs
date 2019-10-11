@@ -15,6 +15,8 @@ public class PlayerAnim
 
 public class PlayerCtrl : MonoBehaviour
 {
+    public static PlayerCtrl instance;
+
     private float h = 0.0f;
     private float v = 0.0f;
     private float r = 0.0f;
@@ -33,6 +35,19 @@ public class PlayerCtrl : MonoBehaviour
     //Animation 컴포넌트를 저장하기 위한 변수
     public Animation anim;
 
+
+    private void Awake()
+    {
+        if (instance == null)
+        {
+            instance = this;
+        }
+        else if (instance != null)
+        {
+            Destroy(this.gameObject);
+        }
+        DontDestroyOnLoad(this.gameObject);
+    }
     void Start()
     {
         //트랜스폼 캐싱 : 미리 불러와서 가져다쓴다
@@ -52,7 +67,6 @@ public class PlayerCtrl : MonoBehaviour
         h = Input.GetAxis("Horizontal");
         v = Input.GetAxis("Vertical");
         r = Input.GetAxis("Mouse X");
-
         
         /*
         if(v<0)
