@@ -6,8 +6,6 @@ TagManager:
   tags:
   - BULLET
   - PLAYER
-  - Enemy
-  - Barrel
   - ENEMY
   layers:
   - Default
@@ -18,10 +16,10 @@ TagManager:
   - UI
   - 
   - 
-  - PostProcessing
-  - Barrel
+  - BARREL
   - BULLET
   - E_BULLET
+  - 
   - 
   - 
   - 
