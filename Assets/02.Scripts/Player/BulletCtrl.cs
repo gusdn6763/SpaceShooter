@@ -12,6 +12,7 @@ public class BulletCtrl : MonoBehaviour
     private Transform tr;
     private Rigidbody rb;
     private TrailRenderer trail;
+
     void Awake()
     {
         //컴포넌트 할당

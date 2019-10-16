@@ -6,7 +6,7 @@ public class FollowCam : MonoBehaviour
 {
     public Transform target; //추적할 대상
     public float moveDamping = 15.0f; //이동속도 계수
-    public float rotateDamping = 10.0f; //회전속도 계수
+    public float rotateDamping = 20.0f; //회전속도 계수
     public float distance = 5.0f; //추적 대상과의 거리
     public float height = 4.0f; //추적 대상과의 높이
     public float targetOffset = 2.0f; //추적 좌표의 오프셋

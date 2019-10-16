@@ -32,7 +32,7 @@ public class PlayerCtrl : MonoBehaviour {
     //Animation 컴포넌트를 저장하기 위한 변수
     public Animation anim;
 
-	void Start ()
+    void Start ()
 	{
         //스크립트가 실행된 후 처음 수행되는 Start 함수에서 Transform 컴포넌트를 할당
         tr = GetComponent<Transform>();
@@ -46,7 +46,7 @@ public class PlayerCtrl : MonoBehaviour {
 	// Update is called once per frame
 	void Update ()
 	{
-		h = Input.GetAxis("Horizontal");
+        h = Input.GetAxis("Horizontal");
 		v = Input.GetAxis("Vertical");
         r = Input.GetAxis("Mouse X");
 
